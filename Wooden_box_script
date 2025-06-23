@@ -1,0 +1,167 @@
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import numpy as np
+
+def caja():
+    # Dimensions of the box in mm
+    W = 100  # Width (X)
+    H = 100  # Height (Z)
+    D = 100  # Depth (Y)
+    t1 = 15  # Thickness for side panels
+    t2 = 5   # Thickness for bottom and top
+
+    # Panels dimensions (t l w)
+    F_w = H
+    F_l = W
+    B_w = H
+    B_l = W
+    R_w = H - t2 - 5
+    R_l = D - 2 * t1
+    L_w = H
+    L_l = D - 2 * t1
+
+    # Panel sizes dictionary: length, width, thickness
+    panel_sizes = {
+        'Back Panel': (B_l, B_w, t1),
+        'Front Panel': (F_l, F_w, t1),
+        'Left Panel': (L_l, L_w, t1),
+        'Right Panel': (R_l, R_w, t1),
+        'Bottom Panel': (W - 2*(t1 - t2), D - 2*(t1 - t2), t2),
+        'Top Panel': (W - (t1 - t2), D - (t1 - t2), t2),
+    }
+
+    # Panels coordinates [x0, x1, y0, y1, z0, z1]
+    B = [0, B_l, 0, t1, 0, B_w]
+    F = [0, F_l, D - t1, D, 0, F_w]
+    L = [0, t1, t1, t1 + L_l, 0, L_w]
+    R = [W - t1, W, t1, t1 + R_l, 0, R_w]
+    bottom = [t1 - t2, W - (t1 - t2), t1 - t2, D - (t1 - t2), 5, 5 + t2]
+    top = [t1 - t2, W, t1 - t2, D - (t1 - t2), R_w, R_w + t2]
+
+    panels = [B, F, L, R, bottom, top]
+    titles = ['Back Panel', 'Front Panel', 'Left Panel', 'Right Panel', 'Bottom Panel', 'Top Panel']
+    colors = ['lightblue', 'orange', 'green', 'red', 'saddlebrown', 'gold']
+
+    # Grooves coordinates (only where applicable)
+    groove_F_b = [t1, W - t1, D - t1, D - t1 + t2 + 1, 5, 5 + t2]
+    groove_F_t = [t1, W, D - t1, D - t1 + t2 + 1, R_w, R_w + t2]
+
+    groove_B_b = [t1, W - t1, t1 - (t2 + 1), t1, 5, 5 + t2]
+    groove_B_t = [t1, W, t1 - (t2 + 1), t1, R_w, R_w + t2]
+
+    groove_L_b = [t1 - 5, t1, t1, t1 + L_l, 5, 5 + t2]
+    groove_L_t = [t1 - 5, t1, t1, t1 + L_l, R_w, R_w + t2]
+
+    groove_R_b = [W - t1, W - t1 + 5, t1, t1 + R_l, 5, 5 + t2]
+    # groove_R_t removed intentionally
+
+    def create_box(x0, x1, y0, y1, z0, z1):
+        verts = [
+            (x0, y0, z0),
+            (x1, y0, z0),
+            (x1, y1, z0),
+            (x0, y1, z0),
+            (x0, y0, z1),
+            (x1, y0, z1),
+            (x1, y1, z1),
+            (x0, y1, z1)
+        ]
+        faces = [
+            [verts[i] for i in [0,1,2,3]],  # bottom
+            [verts[i] for i in [4,5,6,7]],  # top
+            [verts[i] for i in [0,1,5,4]],  # front
+            [verts[i] for i in [2,3,7,6]],  # back
+            [verts[i] for i in [1,2,6,5]],  # right
+            [verts[i] for i in [0,3,7,4]]   # left
+        ]
+        return faces
+
+    # === 1) Simple combined plot of all panels ===
+    fig1 = plt.figure(figsize=(10,8))
+    ax1 = fig1.add_subplot(111, projection='3d')
+
+    for coords, color in zip(panels, colors):
+        faces = create_box(*coords)
+        box = Poly3DCollection(faces, facecolors=color, edgecolors='black', alpha=0.5)
+        ax1.add_collection3d(box)
+
+    # Axes limits and equal aspect ratio
+    ax1.set_xlim(0, W)
+    ax1.set_ylim(0, D)
+    ax1.set_zlim(0, H)
+
+    ax1.set_xlabel('Width (X)')
+    ax1.set_ylabel('Depth (Y)')
+    ax1.set_zlabel('Height (Z)')
+    ax1.set_title('All Panels Combined (Simple)')
+    ax1.view_init(elev=20, azim=-60)
+
+    plt.tight_layout()
+    plt.show()
+
+    # === 2) Separate panels with grooves ===
+    fig2 = plt.figure(figsize=(18, 12))
+
+    for i, (coords, title, color) in enumerate(zip(panels, titles, colors), 1):
+        ax = fig2.add_subplot(2, 3, i, projection='3d')
+        faces = create_box(*coords)
+        box = Poly3DCollection(faces, facecolors=color, edgecolors='black', alpha=0.3)
+        ax.add_collection3d(box)
+
+        # Add grooves per panel
+        if title == 'Front Panel':
+            for groove_coords in [groove_F_b, groove_F_t]:
+                groove_faces = create_box(*groove_coords)
+                groove_box = Poly3DCollection(groove_faces, facecolors='k', edgecolors='black', alpha=1)
+                ax.add_collection3d(groove_box)
+
+        if title == 'Back Panel':
+            for groove_coords in [groove_B_b, groove_B_t]:
+                groove_faces = create_box(*groove_coords)
+                groove_box = Poly3DCollection(groove_faces, facecolors='k', edgecolors='black', alpha=1)
+                ax.add_collection3d(groove_box)
+
+        if title == 'Left Panel':
+            for groove_coords in [groove_L_b, groove_L_t]:
+                groove_faces = create_box(*groove_coords)
+                groove_box = Poly3DCollection(groove_faces, facecolors='k', edgecolors='black', alpha=1)
+                ax.add_collection3d(groove_box)
+
+        if title == 'Right Panel':
+            groove_faces = create_box(*groove_R_b)
+            groove_box = Poly3DCollection(groove_faces, facecolors='k', edgecolors='black', alpha=1)
+            ax.add_collection3d(groove_box)
+            # no top groove on right panel
+
+        max_range = np.array([
+            coords[1] - coords[0],
+            coords[3] - coords[2],
+            coords[5] - coords[4]
+        ]).max()
+
+        x_mid = (coords[0] + coords[1]) / 2
+        y_mid = (coords[2] + coords[3]) / 2
+        z_mid = (coords[4] + coords[5]) / 2
+
+        ax.set_xlim(x_mid - max_range / 2, x_mid + max_range / 2)
+        ax.set_ylim(y_mid - max_range / 2, y_mid + max_range / 2)
+        ax.set_zlim(z_mid - max_range / 2, z_mid + max_range / 2)
+
+        ax.set_title(title)
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+
+        ax.view_init(elev=10, azim=60)
+
+    plt.tight_layout()
+    plt.show()
+
+    # === 3) Print size info ===
+    print("Panel sizes (L x W x T) in mm:")
+    for title, size in panel_sizes.items():
+        length, width, thickness = size
+        print(f"{title}: Length={length}, Width={width}, Thickness={thickness}")
+
+
+caja()
