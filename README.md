@@ -1,1 +1,1 @@
-Python script to obtain the sizes of the 6 pannels for making a wooden box with a sliding top and a grooved bottom preventing deformations when wood expands/contracts. Sizes of the pannels in t w l coordinates (l=grain direction length) and size of the box in W H D coordinates
+Python script to obtain the sizes of the 6 pannels for making a wooden box with a sliding top and a grooved bottom preventing deformations when wood expands/contracts given the box dimensions. Sizes of the pannels in t w l coordinates (l=grain direction length) and size of the box in W H D coordinates
